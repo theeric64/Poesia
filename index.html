@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PoeticVerse - Lectura Contextual</title>
+  <title>PoeticVerse - Aplicación Funcional</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,76 +16,67 @@
   <div class="app-container">
     <header class="app-header">
       <div class="brand">PoeticVerse</div>
-      <div class="gps-badge">
+      <div class="gps-badge" onclick="requestGPSLocation()" title="Clic para actualizar GPS">
         <span class="gps-dot"></span>
-        <span>Parque Central</span>
+        <span id="gps-location-text">Obteniendo GPS...</span>
       </div>
     </header>
 
     <main class="main-content">
-      <div class="section-title">Poema del Día (Contexto Naturaleza)</div>
+      
+      <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+        <input type="text" id="search-input" placeholder="Buscar autor o poema..." style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main);">
+        <button id="btn-search" class="theme-btn" style="flex: initial; width: auto; padding: 0 14px;">🔍</button>
+        <button id="btn-random" class="theme-btn" style="flex: initial; width: auto; padding: 0 14px;" title="Poema Aleatorio">🎲</button>
+      </div>
+
+      <div class="section-title">Poema del Día / Resultado</div>
 
       <article class="poem-card">
-        <h1 class="poem-title">I Dwell in Possibility</h1>
-        <div class="poem-author">Por Emily Dickinson</div>
+        <h1 class="poem-title" id="poem-title">Cargando Título...</h1>
+        <div class="poem-author" id="poem-author">Cargando Autor...</div>
         
-        <div class="poem-body">I dwell in Possibility –
-A fairer House than Prose –
-More numerous of Windows –
-Superior – for Doors –
-
-Of Chambers as the Cedars –
-Impregnable of eye –
-And for an everlasting Roof
-The Gambrels of the Sky –</div>
+        <div class="poem-body" id="poem-body">Cargando versos desde la API...</div>
 
         <div class="poem-actions">
-          <button class="btn-action">❤️ Guardar</button>
-          <button class="btn-action">🔊 Escuchar</button>
-          <button class="btn-action">📍 Fijar Lectura</button>
+          <button class="btn-action" id="btn-favorite">❤️ Guardar</button>
+          <button class="btn-action" onclick="triggerNotification()">🔔 Notificación</button>
         </div>
       </article>
 
       <div class="controls-card">
         <div class="control-group">
-          <span class="control-label">Apariencia / Tema de Lectura</span>
+          <span class="control-label">Tema de Lectura</span>
           <div class="theme-selector">
-            <button class="theme-btn active" onclick="setTheme('light', event)">Claro</button>
-            <button class="theme-btn" onclick="setTheme('sepia', event)">Sepia</button>
-            <button class="theme-btn" onclick="setTheme('dark', event)">Oscuro</button>
+            <button class="theme-btn" data-theme="light" onclick="setTheme('light')">Claro</button>
+            <button class="theme-btn" data-theme="sepia" onclick="setTheme('sepia')">Sepia</button>
+            <button class="theme-btn" data-theme="dark" onclick="setTheme('dark')">Oscuro</button>
           </div>
+        </div>
+
+        <div class="control-group" style="margin-top: 12px;">
+          <span class="control-label">Tamaño de Fuente: <b id="font-size-val">18px</b></span>
+          <input type="range" id="font-slider" min="14" max="26" value="18" style="width: 100%;" oninput="changeFontSize(this.value)">
         </div>
       </div>
     </main>
 
     <nav class="bottom-nav">
-      <a href="#" class="nav-item active">
+      <a href="#" class="nav-item active" onclick="fetchRandomPoem()">
         <span class="nav-icon">🏠</span>
         <span>Inicio</span>
       </a>
-      <a href="#" class="nav-item">
-        <span class="nav-icon">🔍</span>
-        <span>Buscar</span>
+      <a href="#" class="nav-item" onclick="triggerNotification()">
+        <span class="nav-icon">🔔</span>
+        <span>Alertas</span>
       </a>
-      <a href="#" class="nav-item">
+      <a href="#" class="nav-item" onclick="requestGPSLocation()">
         <span class="nav-icon">📍</span>
-        <span>Mapa</span>
-      </a>
-      <a href="#" class="nav-item">
-        <span class="nav-icon">⚙️</span>
-        <span>Ajustes</span>
+        <span>GPS</span>
       </a>
     </nav>
   </div>
 
-  <script>
-    function setTheme(themeName, event) {
-      document.documentElement.setAttribute('data-theme', themeName);
-      
-      const buttons = document.querySelectorAll('.theme-btn');
-      buttons.forEach(btn => btn.classList.remove('active'));
-      event.target.classList.add('active');
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
