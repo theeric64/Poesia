@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PoeticVerse - Lectura Contextual</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <header class="app-header">
+      <div class="brand">PoeticVerse</div>
+      <div class="gps-badge">
+        <span class="gps-dot"></span>
+        <span>Parque Central</span>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div class="section-title">Poema del Día (Contexto Naturaleza)</div>
+
+      <article class="poem-card">
+        <h1 class="poem-title">I Dwell in Possibility</h1>
+        <div class="poem-author">Por Emily Dickinson</div>
+        
+        <div class="poem-body">I dwell in Possibility –
+A fairer House than Prose –
+More numerous of Windows –
+Superior – for Doors –
+
+Of Chambers as the Cedars –
+Impregnable of eye –
+And for an everlasting Roof
+The Gambrels of the Sky –</div>
+
+        <div class="poem-actions">
+          <button class="btn-action">❤️ Guardar</button>
+          <button class="btn-action">🔊 Escuchar</button>
+          <button class="btn-action">📍 Fijar Lectura</button>
+        </div>
+      </article>
+
+      <div class="controls-card">
+        <div class="control-group">
+          <span class="control-label">Apariencia / Tema de Lectura</span>
+          <div class="theme-selector">
+            <button class="theme-btn active" onclick="setTheme('light', event)">Claro</button>
+            <button class="theme-btn" onclick="setTheme('sepia', event)">Sepia</button>
+            <button class="theme-btn" onclick="setTheme('dark', event)">Oscuro</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="bottom-nav">
+      <a href="#" class="nav-item active">
+        <span class="nav-icon">🏠</span>
+        <span>Inicio</span>
+      </a>
+      <a href="#" class="nav-item">
+        <span class="nav-icon">🔍</span>
+        <span>Buscar</span>
+      </a>
+      <a href="#" class="nav-item">
+        <span class="nav-icon">📍</span>
+        <span>Mapa</span>
+      </a>
+      <a href="#" class="nav-item">
+        <span class="nav-icon">⚙️</span>
+        <span>Ajustes</span>
+      </a>
+    </nav>
+  </div>
+
+  <script>
+    function setTheme(themeName, event) {
+      document.documentElement.setAttribute('data-theme', themeName);
+      
+      const buttons = document.querySelectorAll('.theme-btn');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>
