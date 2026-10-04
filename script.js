@@ -1,15 +1,91 @@
-const API_POETRY = 'https://poetrydb.org';
 const BACKEND_URL = 'http://localhost:8080/api';
+
+const POEMAS_ESPANOL = [
+  {
+    title: "Rima XXI",
+    author: "Gustavo Adolfo Bécquer",
+    lines: [
+      "¿Qué es poesía?, dices mientras clavas",
+      "en mi pupila tu pupila azul.",
+      "¿Qué es poesía? ¿Y tú me lo preguntas?",
+      "Poesía... eres tú."
+    ]
+  },
+  {
+    title: "Táctica y Estrategia",
+    author: "Mario Benedetti",
+    lines: [
+      "Mi táctica es mirarte",
+      "aprender como sos",
+      "quererte como sos.",
+      "",
+      "Mi táctica es hablarte",
+      "y escucharte",
+      "construir con palabras un puente indestructible.",
+      "",
+      "Mi estrategia es en cambio",
+      "más profunda y más simple",
+      "mi estrategia es que un día cualquiera",
+      "no sé cómo ni sé con qué pretexto",
+      "por fin me necesites."
+    ]
+  },
+  {
+    title: "Si me quieres, quiéreme entera",
+    author: "Dulce María Loynaz",
+    lines: [
+      "Si me quieres, quiéreme entera,",
+      "no por zonas de luz o sombra...",
+      "Si me quieres, quiéreme negra",
+      "y blanca, y gris, verde y rubia,",
+      "y morena...",
+      "",
+      "Quiéreme día,",
+      "quiéreme noche...",
+      "¡Y madrugada en la ventana abierta!..."
+    ]
+  },
+  {
+    title: "La Infinita",
+    author: "Pablo Neruda",
+    lines: [
+      "Ves estas manos? Han medido la tierra,",
+      "han separado los minerales y los cereales,",
+      "han hecho la paz y la guerra,",
+      "han derribado las distancias de todos los mares y ríos.",
+      "",
+      "Y sin embargo",
+      "cuando me recorren a ti, amor, a tu pequeña nada,",
+      "no alcanzan a abarcarte..."
+    ]
+  },
+  {
+    title: "El Poeta Pide a su Amor que le Escriba",
+    author: "Federico García Lorca",
+    lines: [
+      "Amor de mis entrañas, viva muerte,",
+      "en vano espero tu palabra escrita",
+      "y pienso, con la flor que se marchita,",
+      "que si vivo sin mí quiero perderte.",
+      "",
+      "El aire es inmortal. La piedra inerte",
+      "ni conoce la sombra ni la evita.",
+      "Corazón interior no necesita",
+      "la miel helada que la luna vierte."
+    ]
+  }
+];
 
 let userState = {
   userId: 'usr_demo_123',
   theme: localStorage.getItem('pv_theme') || 'light',
-  fontSize: localStorage.getItem('pv_fontSize') || '16',
+  fontSize: localStorage.getItem('pv_fontSize') || '18',
   currentPoem: null,
   location: { lat: null, lng: null, context: 'Desconocido' }
 };
 document.addEventListener('DOMContentLoaded', () => {
   initApp();
+  registerServiceWorker();
 });
 
 function initApp() {
@@ -20,64 +96,78 @@ function initApp() {
   logTelemetry('APP_INIT', 'HomeScreen', { timestamp: new Date().toISOString() });
 }
 
-
-async function fetchRandomPoem() {
-  showLoading(true);
-  try {
-    const response = await fetch(`${API_POETRY}/random/1`);
-    const data = await response.json();
-
-    if (data && data.length > 0) {
-      userState.currentPoem = data[0];
-      renderPoem(data[0]);
-      logTelemetry('FETCH_POEM', 'HomeScreen', { title: data[0].title, author: data[0].author });
-    }
-  } catch (error) {
-    console.error('Error al consultar PoetryDB:', error);
-    document.getElementById('poem-body').innerText = 'No se pudo cargar el poema. Verifica tu conexión.';
-  } finally {
-    showLoading(false);
+function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then((registration) => {
+          console.log('🚀 [PWA Status] Service Worker registrado:', registration.scope);
+        })
+        .catch((error) => {
+          console.error('❌ [PWA Status] Error al registrar el Service Worker:', error);
+        });
+    });
   }
 }
-
-async function searchPoem(query) {
-  if (!query.trim()) return;
+async function fetchRandomPoem() {
   showLoading(true);
   
-  try {
-    const response = await fetch(`${API_POETRY}/author,title/${encodeURIComponent(query)}`);
-    const data = await response.json();
+  setTimeout(() => {
+    const randomIndex = Math.floor(Math.random() * POEMAS_ESPANOL.length);
+    const poem = POEMAS_ESPANOL[randomIndex];
 
-    if (Array.isArray(data) && data.length > 0) {
-      renderPoem(data[0]);
-      logTelemetry('SEARCH', 'SearchTab', { query: query, resultsFound: data.length });
-    } else {
-      alert('No se encontraron poemas con ese criterio.');
-    }
-  } catch (error) {
-    console.error('Error en la búsqueda:', error);
-  } finally {
+    userState.currentPoem = poem;
+    renderPoem(poem);
+    logTelemetry('FETCH_POEM', 'HomeScreen', { title: poem.title, author: poem.author, lang: 'es' });
     showLoading(false);
-  }
+  }, 300);
+}
+
+function searchPoem(query) {
+  if (!query.trim()) return;
+  showLoading(true);
+
+  const cleanQuery = query.toLowerCase().trim();
+  const foundPoem = POEMAS_ESPANOL.find(poem => 
+    poem.title.toLowerCase().includes(cleanQuery) || 
+    poem.author.toLowerCase().includes(cleanQuery)
+  );
+
+  setTimeout(() => {
+    if (foundPoem) {
+      userState.currentPoem = foundPoem;
+      renderPoem(foundPoem);
+      logTelemetry('SEARCH', 'SearchTab', { query: query, result: 'found' });
+    } else {
+      alert(`No se encontraron poemas en español para: "${query}". Prueba buscando por "Neruda", "Bécquer" o "Lorca".`);
+    }
+    showLoading(false);
+  }, 200);
 }
 
 function renderPoem(poem) {
-  document.getElementById('poem-title').innerText = poem.title;
-  document.getElementById('poem-author').innerText = `Por ${poem.author}`;
-  document.getElementById('poem-body').innerText = Array.isArray(poem.lines) ? poem.lines.join('\n') : poem.lines;
+  const titleEl = document.getElementById('poem-title');
+  const authorEl = document.getElementById('poem-author');
+  const bodyEl = document.getElementById('poem-body');
+
+  if (titleEl) titleEl.innerText = poem.title;
+  if (authorEl) authorEl.innerText = `Por ${poem.author}`;
+  if (bodyEl) {
+    bodyEl.innerText = Array.isArray(poem.lines) ? poem.lines.join('\n') : poem.lines;
+  }
 }
 
 function showLoading(isLoading) {
   const body = document.getElementById('poem-body');
-  if (isLoading) {
-    body.style.opacity = '0.5';
-    body.innerText = 'Cargando verso desde PoetryDB...';
-  } else {
-    body.style.opacity = '1';
+  if (body) {
+    if (isLoading) {
+      body.style.opacity = '0.5';
+      body.innerText = 'Cargando verso en español...';
+    } else {
+      body.style.opacity = '1';
+    }
   }
 }
-
-
 function requestGPSLocation() {
   const gpsLabel = document.getElementById('gps-location-text');
 
@@ -88,7 +178,10 @@ function requestGPSLocation() {
         userState.location.lng = position.coords.longitude;
 
         userState.location.context = 'Entorno Urbano / Parque';
-        gpsLabel.innerText = `${userState.location.context}`;
+
+        if (gpsLabel) {
+          gpsLabel.innerText = `${userState.location.context}`;
+        }
         
         logTelemetry('GPS_UPDATE', 'GPSModule', {
           lat: userState.location.lat,
@@ -96,12 +189,12 @@ function requestGPSLocation() {
         });
       },
       (error) => {
-        gpsLabel.innerText = 'Ubicación desactivada';
-        console.warn('GPS Denegado o no disponible:', error.message);
+        if (gpsLabel) gpsLabel.innerText = 'GPS Desactivado';
+        console.warn('Acceso a GPS denegado:', error.message);
       }
     );
   } else {
-    gpsLabel.innerText = 'GPS no soportado';
+    if (gpsLabel) gpsLabel.innerText = 'GPS no soportado';
   }
 }
 
@@ -122,7 +215,9 @@ function changeFontSize(sizePx) {
   userState.fontSize = sizePx;
   document.documentElement.style.setProperty('--font-size-poem', `${sizePx}px`);
   localStorage.setItem('pv_fontSize', sizePx);
-  document.getElementById('font-size-val').innerText = `${sizePx}px`;
+
+  const label = document.getElementById('font-size-val');
+  if (label) label.innerText = `${sizePx}px`;
 
   logTelemetry('CHANGE_FONT_SIZE', 'Settings', { fontSize: sizePx });
 }
@@ -130,23 +225,25 @@ function changeFontSize(sizePx) {
 function applySavedPreferences() {
   setTheme(userState.theme);
   changeFontSize(userState.fontSize);
-  document.getElementById('font-slider').value = userState.fontSize;
+
+  const slider = document.getElementById('font-slider');
+  if (slider) slider.value = userState.fontSize;
 }
 
 
 function triggerNotification() {
   if ('Notification' in window && Notification.permission === 'granted') {
     new Notification('PoeticVerse 📜', {
-      body: `Poema del Día: "${userState.currentPoem?.title || 'Descubre versos nuevos'}"`
+      body: `Poema sugerido: "${userState.currentPoem?.title || 'Explora nuevos versos'}"`
     });
   } else if ('Notification' in window && Notification.permission !== 'denied') {
     Notification.requestPermission().then(permission => {
       if (permission === 'granted') triggerNotification();
     });
   } else {
-    alert(`🔔 [Notificación PoeticsVerse]\n¡Tu poema del día está listo!`);
+    alert(`🔔 [Notificación PoeticVerse]\nPoema recomendado: "${userState.currentPoem?.title || 'Nuevo poema disponible'}"`);
   }
-  logTelemetry('NOTIFICATION_CLICK', 'PushService', { status: 'triggered' });
+  logTelemetry('NOTIFICATION_TRIGGER', 'PushService', { status: 'executed' });
 }
 
 function logTelemetry(eventType, screenName, details = {}) {
@@ -160,7 +257,7 @@ function logTelemetry(eventType, screenName, details = {}) {
     timestamp: new Date().toISOString()
   };
 
-  console.log('📡 [TELEMETRÍA ENVIADA AL BACKEND]:', payload);
+  console.log('📡 [TELEMETRÍA LOG]:', payload);
 
   fetch(`${BACKEND_URL}/tracking/logs`, {
     method: 'POST',
@@ -170,24 +267,36 @@ function logTelemetry(eventType, screenName, details = {}) {
   });
 }
 
-
 function setupEventListeners() {
-  document.getElementById('btn-favorite')?.addEventListener('click', () => {
-    let favorites = JSON.parse(localStorage.getItem('pv_favorites') || '[]');
-    if (userState.currentPoem) {
-      favorites.push({ ...userState.currentPoem, savedAt: new Date().toISOString(), location: userState.location });
-      localStorage.setItem('pv_favorites', JSON.stringify(favorites));
-      alert('❤️ Poema guardado en tus favoritos locales');
-      logTelemetry('TOGGLE_FAVORITE', 'HomeScreen', { poemTitle: userState.currentPoem.title });
-    }
-  });
+  const btnFavorite = document.getElementById('btn-favorite');
+  if (btnFavorite) {
+    btnFavorite.addEventListener('click', () => {
+      let favorites = JSON.parse(localStorage.getItem('pv_favorites') || '[]');
+      if (userState.currentPoem) {
+        favorites.push({
+          ...userState.currentPoem,
+          savedAt: new Date().toISOString(),
+          location: userState.location
+        });
+        localStorage.setItem('pv_favorites', JSON.stringify(favorites));
+        alert('❤️ Poema guardado en tus favoritos locales');
+        logTelemetry('TOGGLE_FAVORITE', 'HomeScreen', { poemTitle: userState.currentPoem.title });
+      }
+    });
+  }
 
-  document.getElementById('btn-search')?.addEventListener('click', () => {
-    const input = document.getElementById('search-input').value;
-    searchPoem(input);
-  });
+  const btnSearch = document.getElementById('btn-search');
+  if (btnSearch) {
+    btnSearch.addEventListener('click', () => {
+      const input = document.getElementById('search-input');
+      if (input) searchPoem(input.value);
+    });
+  }
 
-  document.getElementById('btn-random')?.addEventListener('click', () => {
-    fetchRandomPoem();
-  });
+  const btnRandom = document.getElementById('btn-random');
+  if (btnRandom) {
+    btnRandom.addEventListener('click', () => {
+      fetchRandomPoem();
+    });
+  }
 }

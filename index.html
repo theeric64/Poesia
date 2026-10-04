@@ -3,7 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PoeticVerse - Aplicación Funcional</title>
+  <title>PoeticVerse - Lectura Contextual</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#5b2c6f">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PoeticVerse">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3204/3204052.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,7 +34,7 @@
       
       <div style="display: flex; gap: 8px; margin-bottom: 16px;">
         <input type="text" id="search-input" placeholder="Buscar autor o poema..." style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main);">
-        <button id="btn-search" class="theme-btn" style="flex: initial; width: auto; padding: 0 14px;">🔍</button>
+        <button id="btn-search" class="theme-btn" style="flex: initial; width: auto; padding: 0 14px;" title="Buscar">🔍</button>
         <button id="btn-random" class="theme-btn" style="flex: initial; width: auto; padding: 0 14px;" title="Poema Aleatorio">🎲</button>
       </div>
 
@@ -62,15 +70,15 @@
     </main>
 
     <nav class="bottom-nav">
-      <a href="#" class="nav-item active" onclick="fetchRandomPoem()">
+      <a href="#" class="nav-item active" onclick="fetchRandomPoem(); return false;">
         <span class="nav-icon">🏠</span>
         <span>Inicio</span>
       </a>
-      <a href="#" class="nav-item" onclick="triggerNotification()">
+      <a href="#" class="nav-item" onclick="triggerNotification(); return false;">
         <span class="nav-icon">🔔</span>
         <span>Alertas</span>
       </a>
-      <a href="#" class="nav-item" onclick="requestGPSLocation()">
+      <a href="#" class="nav-item" onclick="requestGPSLocation(); return false;">
         <span class="nav-icon">📍</span>
         <span>GPS</span>
       </a>
