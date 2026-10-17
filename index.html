@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PoeticVerse - Lectura Contextual</title>
 
+  <!-- PWA & Mobile Web App Meta Tags -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#5b2c6f">
   <meta name="mobile-web-app-capable" content="yes">
@@ -13,25 +14,33 @@
   <meta name="apple-mobile-web-app-title" content="PoeticVerse">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3204/3204052.png">
 
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+  <!-- Estilos CSS -->
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
   <div class="app-container">
+    <!-- Header con Estado de GPS y Autenticación -->
     <header class="app-header">
       <div class="brand">PoeticVerse</div>
-      <div class="gps-badge" onclick="requestGPSLocation()" title="Clic para actualizar GPS">
-        <span class="gps-dot"></span>
-        <span id="gps-location-text">Obteniendo GPS...</span>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div class="gps-badge" onclick="requestGPSLocation()" title="Clic para actualizar GPS">
+          <span class="gps-dot"></span>
+          <span id="gps-location-text">Obteniendo GPS...</span>
+        </div>
+        <button id="auth-btn" class="theme-btn" onclick="openAuthModal()" style="padding: 4px 10px; font-size: 0.75rem;">Ingresar</button>
       </div>
     </header>
 
+    <!-- Contenido Principal -->
     <main class="main-content">
       
+      <!-- Búsqueda y Generador -->
       <div style="display: flex; gap: 8px; margin-bottom: 16px;">
         <input type="text" id="search-input" placeholder="Buscar autor o poema..." style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main);">
         <button id="btn-search" class="theme-btn" style="flex: initial; width: auto; padding: 0 14px;" title="Buscar">🔍</button>
@@ -40,11 +49,12 @@
 
       <div class="section-title">Poema del Día / Resultado</div>
 
+      <!-- Tarjeta Dinámica del Poema -->
       <article class="poem-card">
         <h1 class="poem-title" id="poem-title">Cargando Título...</h1>
         <div class="poem-author" id="poem-author">Cargando Autor...</div>
         
-        <div class="poem-body" id="poem-body">Cargando versos desde la API...</div>
+        <div class="poem-body" id="poem-body">Cargando versos en español...</div>
 
         <div class="poem-actions">
           <button class="btn-action" id="btn-favorite">❤️ Guardar</button>
@@ -52,6 +62,7 @@
         </div>
       </article>
 
+      <!-- Panel de Ajustes Rápidos -->
       <div class="controls-card">
         <div class="control-group">
           <span class="control-label">Tema de Lectura</span>
@@ -69,6 +80,7 @@
       </div>
     </main>
 
+    <!-- Navegación Inferior Móvil -->
     <nav class="bottom-nav">
       <a href="#" class="nav-item active" onclick="fetchRandomPoem(); return false;">
         <span class="nav-icon">🏠</span>
@@ -85,6 +97,41 @@
     </nav>
   </div>
 
+  <!-- Modal de Autenticación (Login / Registro) -->
+  <div id="auth-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 id="modal-title" style="font-size: 1.1rem; color: var(--accent-color);">Iniciar Sesión</h2>
+        <button onclick="closeAuthModal()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+      </div>
+
+      <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+        <div id="name-group" class="control-group" style="display: none; margin-bottom: 12px;">
+          <label class="control-label">Nombre Completo</label>
+          <input type="text" id="auth-name" placeholder="Tu nombre" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main);">
+        </div>
+
+        <div class="control-group" style="margin-bottom: 12px;">
+          <label class="control-label">Correo Electrónico</label>
+          <input type="email" id="auth-email" required placeholder="correo@ejemplo.com" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main);">
+        </div>
+
+        <div class="control-group" style="margin-bottom: 16px;">
+          <label class="control-label">Contraseña</label>
+          <input type="password" id="auth-password" required placeholder="••••••••" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main);">
+        </div>
+
+        <button type="submit" id="auth-submit-btn" class="theme-btn active" style="width: 100%; padding: 10px; margin-bottom: 12px;">Ingresar</button>
+      </form>
+
+      <div style="text-align: center; font-size: 0.8rem; color: var(--text-muted);">
+        <span id="toggle-auth-text">¿No tienes cuenta?</span>
+        <a href="#" id="toggle-auth-link" onclick="toggleAuthMode(); return false;" style="color: var(--accent-color); font-weight: 600; text-decoration: none; margin-left: 4px;">Regístrate</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Principal y PWA -->
   <script src="script.js"></script>
 </body>
 </html>

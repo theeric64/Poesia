@@ -1,3 +1,6 @@
+// ==========================================
+// ESTADO GLOBAL Y CONFIGURACIÓN (ESPAÑOL)
+// ==========================================
 const BACKEND_URL = 'http://localhost:8080/api';
 
 const POEMAS_ESPANOL = [
@@ -76,13 +79,19 @@ const POEMAS_ESPANOL = [
   }
 ];
 
+let isRegisterMode = false;
+
 let userState = {
-  userId: 'usr_demo_123',
+  currentUser: JSON.parse(localStorage.getItem('pv_active_user')) || null,
   theme: localStorage.getItem('pv_theme') || 'light',
   fontSize: localStorage.getItem('pv_fontSize') || '18',
   currentPoem: null,
   location: { lat: null, lng: null, context: 'Desconocido' }
 };
+
+// ==========================================
+// INICIALIZACIÓN Y SERVICE WORKER
+// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
   initApp();
   registerServiceWorker();
@@ -90,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initApp() {
   applySavedPreferences();
+  updateAuthUI();
   requestGPSLocation();
   fetchRandomPoem();
   setupEventListeners();
@@ -109,6 +119,111 @@ function registerServiceWorker() {
     });
   }
 }
+
+// ==========================================
+// 1. MÓDULO DE AUTENTICACIÓN Y SESIÓN
+// ==========================================
+function openAuthModal() {
+  if (userState.currentUser) {
+    // Si ya está autenticado, funciona como botón de Salir (Logout)
+    if (confirm(`¿Deseas cerrar sesión, ${userState.currentUser.name || userState.currentUser.email}?`)) {
+      logTelemetry('LOGOUT', 'AuthModule', { email: userState.currentUser.email });
+      userState.currentUser = null;
+      localStorage.removeItem('pv_active_user');
+      updateAuthUI();
+    }
+  } else {
+    document.getElementById('auth-modal').style.display = 'flex';
+  }
+}
+
+function closeAuthModal() {
+  document.getElementById('auth-modal').style.display = 'none';
+}
+
+function toggleAuthMode() {
+  isRegisterMode = !isRegisterMode;
+  const title = document.getElementById('modal-title');
+  const nameGroup = document.getElementById('name-group');
+  const submitBtn = document.getElementById('auth-submit-btn');
+  const toggleText = document.getElementById('toggle-auth-text');
+  const toggleLink = document.getElementById('toggle-auth-link');
+
+  if (isRegisterMode) {
+    title.innerText = 'Crear Cuenta';
+    nameGroup.style.display = 'block';
+    submitBtn.innerText = 'Registrarse';
+    toggleText.innerText = '¿Ya tienes una cuenta?';
+    toggleLink.innerText = 'Inicia Sesión';
+  } else {
+    title.innerText = 'Iniciar Sesión';
+    nameGroup.style.display = 'none';
+    submitBtn.innerText = 'Ingresar';
+    toggleText.innerText = '¿No tienes cuenta?';
+    toggleLink.innerText = 'Regístrate';
+  }
+}
+
+function handleAuthSubmit(event) {
+  event.preventDefault();
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const name = document.getElementById('auth-name').value.trim();
+
+  let users = JSON.parse(localStorage.getItem('pv_registered_users') || '[]');
+
+  if (isRegisterMode) {
+    // Proceso de Registro
+    const userExists = users.some(u => u.email === email);
+    if (userExists) {
+      alert('El correo ya se encuentra registrado. Inicia sesión.');
+      return;
+    }
+
+    const newUser = { id: 'usr_' + Date.now(), name: name || 'Lector', email: email, password: password };
+    users.push(newUser);
+    localStorage.setItem('pv_registered_users', JSON.stringify(users));
+
+    userState.currentUser = { id: newUser.id, name: newUser.name, email: newUser.email };
+    localStorage.setItem('pv_active_user', JSON.stringify(userState.currentUser));
+
+    alert(`¡Bienvenido/a, ${userState.currentUser.name}! Tu cuenta ha sido creada.`);
+    logTelemetry('REGISTER', 'AuthModule', { email: email });
+  } else {
+    // Proceso de Inicio de Sesión
+    const validUser = users.find(u => u.email === email && u.password === password);
+    if (!validUser) {
+      alert('Credenciales incorrectas. Verifica tu correo y contraseña.');
+      return;
+    }
+
+    userState.currentUser = { id: validUser.id, name: validUser.name, email: validUser.email };
+    localStorage.setItem('pv_active_user', JSON.stringify(userState.currentUser));
+
+    alert(`¡Hola de nuevo, ${userState.currentUser.name}!`);
+    logTelemetry('LOGIN', 'AuthModule', { email: email });
+  }
+
+  updateAuthUI();
+  closeAuthModal();
+}
+
+function updateAuthUI() {
+  const authBtn = document.getElementById('auth-btn');
+  if (authBtn) {
+    if (userState.currentUser) {
+      authBtn.innerText = `Salir (${userState.currentUser.name.split(' ')[0]})`;
+      authBtn.style.borderColor = '#27ae60';
+    } else {
+      authBtn.innerText = 'Ingresar';
+      authBtn.style.borderColor = 'var(--border-color)';
+    }
+  }
+}
+
+// ==========================================
+// 2. OBTENCIÓN DE POEMAS EN ESPAÑOL
+// ==========================================
 async function fetchRandomPoem() {
   showLoading(true);
   
@@ -168,6 +283,10 @@ function showLoading(isLoading) {
     }
   }
 }
+
+// ==========================================
+// 3. GEOLOCALIZACIÓN Y PREFERENCIAS
+// ==========================================
 function requestGPSLocation() {
   const gpsLabel = document.getElementById('gps-location-text');
 
@@ -176,7 +295,6 @@ function requestGPSLocation() {
       (position) => {
         userState.location.lat = position.coords.latitude;
         userState.location.lng = position.coords.longitude;
-
         userState.location.context = 'Entorno Urbano / Parque';
 
         if (gpsLabel) {
@@ -197,7 +315,6 @@ function requestGPSLocation() {
     if (gpsLabel) gpsLabel.innerText = 'GPS no soportado';
   }
 }
-
 
 function setTheme(themeName) {
   userState.theme = themeName;
@@ -230,7 +347,9 @@ function applySavedPreferences() {
   if (slider) slider.value = userState.fontSize;
 }
 
-
+// ==========================================
+// 4. NOTIFICACIONES Y TELEMETRÍA
+// ==========================================
 function triggerNotification() {
   if ('Notification' in window && Notification.permission === 'granted') {
     new Notification('PoeticVerse 📜', {
@@ -248,7 +367,8 @@ function triggerNotification() {
 
 function logTelemetry(eventType, screenName, details = {}) {
   const payload = {
-    userId: userState.userId,
+    userId: userState.currentUser ? userState.currentUser.id : 'guest',
+    userEmail: userState.currentUser ? userState.currentUser.email : null,
     eventType: eventType,
     screenName: screenName,
     latitude: userState.location.lat,
@@ -264,9 +384,13 @@ function logTelemetry(eventType, screenName, details = {}) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   }).catch(() => {
+    // Silencia la excepción si el servidor local no está encendido
   });
 }
 
+// ==========================================
+// 5. EVENT LISTENERS
+// ==========================================
 function setupEventListeners() {
   const btnFavorite = document.getElementById('btn-favorite');
   if (btnFavorite) {
@@ -275,6 +399,7 @@ function setupEventListeners() {
       if (userState.currentPoem) {
         favorites.push({
           ...userState.currentPoem,
+          savedBy: userState.currentUser ? userState.currentUser.email : 'guest',
           savedAt: new Date().toISOString(),
           location: userState.location
         });
